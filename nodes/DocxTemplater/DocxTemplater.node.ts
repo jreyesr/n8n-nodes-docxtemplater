@@ -111,8 +111,8 @@ export class DocxTemplater implements INodeType {
 		],
 		displayName: 'DocxTemplater',
 		name: 'docxTemplater',
-		// icon: 'file:friendGrid.svg',
 		group: ['transform'],
+		// icon: 'file:friendGrid.svg',
 		version: 1,
 		description: 'Generate an Office document from a template',
 		defaults: {
@@ -150,6 +150,7 @@ export class DocxTemplater implements INodeType {
 					) as string;
 					const context = this.getNodeParameter('context', i, {}, { ensureType: 'json' });
 
+					const expressionParser = require('docxtemplater/expressions.js'); // NOTE: Dynamic import to ensure a new version each time?
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);
 					const zip = new PizZip(inputDataBuffer);
 					const doc = new Docxtemplater(zip, {
@@ -158,6 +159,7 @@ export class DocxTemplater implements INodeType {
 							ensureType: 'boolean',
 						}) as boolean,
 						linebreaks: true,
+						parser: expressionParser,
 					});
 					this.logger.debug('render', {
 						inputFileName: inputFileProperty,
