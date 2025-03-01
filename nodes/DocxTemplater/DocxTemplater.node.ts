@@ -5,8 +5,10 @@ import {
 	INodeTypeDescription,
 	JsonObject,
 	NodeApiError,
+	NodeConnectionType,
 	NodeOperationError,
 } from 'n8n-workflow';
+import type { Tool } from '@langchain/core/tools';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 
@@ -118,8 +120,15 @@ export class DocxTemplater implements INodeType {
 		defaults: {
 			name: 'DocxTemplater',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [
+			{ displayName: '', type: NodeConnectionType.Main },
+			{
+				displayName: 'Formatters',
+				type: NodeConnectionType.AiTool,
+				required: false,
+			},
+		],
+		outputs: [NodeConnectionType.Main],
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -151,6 +160,20 @@ export class DocxTemplater implements INodeType {
 					const context = this.getNodeParameter('context', i, {}, { ensureType: 'json' });
 
 					const expressionParser = require('docxtemplater/expressions.js'); // NOTE: Dynamic import to ensure a new version each time?
+
+					// make tools available as filters
+					const connectedTools =
+						((await this.getInputConnectionData(NodeConnectionType.AiTool, i)) as Tool[]) || [];
+					for (const t of connectedTools) {
+						expressionParser.filters[t.name] = function (input: any) {
+							if (!input) {
+								// short-circuit undefineds
+								return input;
+							}
+							return t.invoke({ args: {query: input, arguments} })
+						};
+					}
+
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);
 					const zip = new PizZip(inputDataBuffer);
 					const doc = new Docxtemplater(zip, {

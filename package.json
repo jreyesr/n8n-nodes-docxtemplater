@@ -49,7 +49,8 @@
     "typescript": "^5.5.3"
   },
   "peerDependencies": {
-    "n8n-workflow": "*"
+    "n8n-workflow": "*",
+    "@langchain/core": "*"
   },
   "dependencies": {
     "angular-expressions": "^1.4.3",
