@@ -165,14 +165,22 @@ export class DocxTemplater implements INodeType {
 					const connectedTools =
 						((await this.getInputConnectionData(NodeConnectionType.AiTool, i)) as Tool[]) || [];
 					for (const t of connectedTools) {
-						expressionParser.filters[t.name] = function (input: any) {
+						expressionParser.filters[t.name] = (input: any) => {
+							this.logger.debug("docxTemplater.customFilter", {name: t.name, input})
 							if (!input) {
 								// short-circuit undefineds
 								return input;
 							}
-							return t.invoke({ args: {query: input, arguments} })
+							return t.invoke({ args: { query: input, arguments } });
 						};
 					}
+					expressionParser.filters.toUpperCase = (input: string | undefined) => {
+						if (!input) {
+							return input;
+						}
+						this.logger.warn('toUpperCase', { input });
+						return input.toUpperCase();
+					};
 
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);
 					const zip = new PizZip(inputDataBuffer);
