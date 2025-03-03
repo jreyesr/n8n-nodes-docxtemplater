@@ -193,8 +193,21 @@ export class DocxTemplater implements INodeType {
 									return val;
 								});
 						};
-					const mapOfTools = Object.fromEntries(connectedTools.map((t) => [t.name, wrapper(t)]));
-					this.logger.debug("docxtemplater.tools", {tools: connectedTools.map(t => t.name)})
+
+					// handmade regexy rules to convert Tool node names (e.g. "Date & Time") into safe transform names (e.g. "date_time")
+					const transformSafeName = (toolName: string) =>
+						toolName // "Date_&_Time", the space-into-underscore replacement is done by create-node-as-tool in N8N, https://github.com/n8n-io/n8n/blob/24681f843c906c6b83c8c686b5c11fa18d792fd7/packages/core/src/execution-engine/node-execution-context/utils/create-node-as-tool.ts#L122
+							.toLowerCase() // => "date_&_time"
+							.replace(/-/, '_') // => "date_&_time"
+							.replace(/[^a-z0-9_]/, '') // => "date__time": only keep a subset of very safe characters for transform names
+							.replace(/_{2,}/, '_'); // => "date_time": replace runs of _s by a single one
+					const mapOfTools = Object.fromEntries(
+						connectedTools.map((t) => [transformSafeName(t.name), wrapper(t)]),
+					);
+					this.logger.debug('docxtemplater.tools', { tools: Object.keys(mapOfTools) });
+					// TODO: Pass Proxy object that throws a nicer error when a nonexistent Filter is accessed
+					// Right now we let it pass and it explodes inside docxtemplater, and the error msg isn't too clear
+					// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
 					const jexlparser = mozjexlParser({ filters: { ...defaultFilters, ...mapOfTools } });
 
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);
