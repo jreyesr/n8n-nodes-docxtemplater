@@ -249,14 +249,7 @@ const makeParser = function (config: ParserOptions) {
 					},
 				);
 
-				let result: Promise<any> = jexl.eval(tag, px).then((val: any) => {
-					// Need to serialize objects (this check also covers arrays!) to strings, because otherwise
-					// they render in the output doc as "[Object object]", which should almost never make sense
-					// NOTE: May need to disable this later if it turns out that JSON objects are needed for other things
-					// (e.g. expressing Word elements?)
-					if (typeof val === 'object') return JSON.stringify(val);
-					else return val;
-				});
+				let result: Promise<any> = jexl.eval(tag, px);
 				// if (typeof config.postEvaluate === "function") {
 				// 	result = config.postEvaluate(result, tag, scope, context);
 				// }
