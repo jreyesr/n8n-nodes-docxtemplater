@@ -53,8 +53,8 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
-    "angular-expressions": "^1.4.3",
     "docxtemplater": "^3.60.0",
+    "mozjexl": "^1.1.6",
     "pizzip": "^3.1.8"
   }
 }

@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="n8n" type="javaScript">
+    <properties>
+      <sourceFilesUrls>
+        <item url="file://$USER_HOME$/.nvm/versions/node/v22.14.0/lib/node_modules/n8n" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$USER_HOME$/.nvm/versions/node/v22.14.0/lib/node_modules/n8n" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

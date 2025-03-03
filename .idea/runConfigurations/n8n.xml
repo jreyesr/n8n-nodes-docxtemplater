@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="n8n" type="NodeJSConfigurationType" path-to-node="$USER_HOME$/.nvm/versions/node/v22.14.0/bin/node" nameIsGenerated="true" path-to-js-file=".nvm/versions/node/v22.14.0/bin/n8n" working-dir="$USER_HOME$">
+    <envs>
+      <env name="N8N_LOG_LEVEL" value="debug" />
+      <env name="N8N_PORT" value="5679" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>
