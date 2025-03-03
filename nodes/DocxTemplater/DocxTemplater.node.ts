@@ -161,7 +161,7 @@ export class DocxTemplater implements INodeType {
 					const wrapper =
 						(t: Tool) =>
 						(arg1: any, ...args: any[]): any => {
-							const toolArgs = args.length === 0 ? arg1 : { input: arg1, args: args };
+							const toolArgs = { input: arg1, args: args };
 							this.logger.debug('docxtemplater.customfilter', {
 								name: t.name,
 								input: arg1,
