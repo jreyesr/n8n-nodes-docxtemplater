@@ -1,29 +1,94 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-docxtemplater
 
-# n8n-nodes-starter
+This is an n8n community node. It lets you use [docxtemplater](https://docxtemplater.com/) in your n8n workflows.
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](n8n.io). It includes the node linter and other dependencies.
+[docxtemplater](https://docxtemplater.com/) is a library that generates DOCX, PPTX and XLSX documents from templates and
+a database containing the custom data. This enables you to automate large-scale document generation efficiently.
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+The docxtemplater tags (e.g. `{ object.data | filter1 | filter2 }`) can
+use [Mozjexl](https://github.com/mozilla/mozjexl?tab=readme-ov-file#all-the-details) syntax: binary operators such as +
+and -, comparisons such as == or !=, and [transforms](https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms)
+such as `| lower` that work like shell pipes.
 
+This node lets you transform this template document:
 
-## Using this starter
+![a screenshot of a Word document containing some tags surrounded by curly brackets](imgs/readme_sourcedoc.png)
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+into this document:
 
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `pnpm lint` to check for errors or `pnpm lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
+![a screenshot of a PDF document where the tags have been replaced by data](imgs/readme_outputdoc.png)
 
-## More information
+It also allows you to
+use [N8N's Advanced AI Tool nodes](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/), like those that
+are used to provide "Tool Calling" functionality on LLMs:
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+![img.png](img.png)
 
-## License
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+[Installation](#installation)  
+[Operations](#operations)  
+[Compatibility](#compatibility)  
+[Usage](#usage)
+[Resources](#resources)  
+[Version history](#version-history)
+
+## Installation
+
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community
+nodes documentation.
+
+## Operations
+
+### Render
+
+This operation receives a DOCX, PPTX or XLSX document (1), plus a "context" (a JSON document) (2), and outputs another
+DOCX, PPTX or XLSX document (3). The input document can have "tags" such as `{ value }`, which will be replaced with the
+corresponding data in the context.
+
+![a screenshot from the N8N UI showing a Render node, which has a Word document in the input and some JSON data in a text field](imgs/readme_nodeconfig.png)
+
+With the context in the image above, it's possible to write tags like this (and, in
+general, [anything else that is supported by the Mozjexl Javascript Expression Language](https://github.com/mozilla/mozjexl)
+in the Word document:
+
+* `{ first_name }`: Will simply be replaced by the corresponding JSON field, so the output document will contain `Joe`
+* `{ first_name + " " + last_name }`: Will execute a string concatenation, so the output will be `Joe Doe`
+* `{ first_name | uppercase }`: Will read the `first_name` property and then call
+  a https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms on it (must be implemented!). This may output `JOE`
+* `{ positions["Chief of " in .title] }`: Will [filter the
+  `positions` array](https://github.com/mozilla/mozjexl?tab=readme-ov-file#collections) array such that only positions
+  that mention "Chief of " are kept
+
+All these can be freely mixed with Docxtemplater syntax, such
+as [loops](https://docxtemplater.com/docs/tag-types/#loops)
+or [conditionals](https://docxtemplater.com/docs/tag-types/#conditions):
+
+![a Word document with a loop over the letters of a string](imgs/readme_loopfilter.png)
+
+turns into
+
+![a PDF document where the loop has been turned into a set of bullet points](imgs/readme_loopfilter_output.png)
+
+## Compatibility
+
+This node has been developed on N8N v1.80.5. It should work with older versions as long as they
+include [Tools for AI nodes](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolcode/).
+If you encounter any problems, please [open an issue](https://github.com/jreyesr/n8n-nodes-docxtemplater/issues)!
+
+## Usage
+
+_This is an optional section. Use it to help users with any difficult or confusing aspects of the node._
+
+_By the time users are looking for community nodes, they probably already know n8n basics. But if you expect new users,
+you can link to the [Try it out](https://docs.n8n.io/try-it-out/) documentation to help them get started._
+
+## Resources
+
+* [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+* <https://docxtemplater.com/docs/tag-types/>
+
+## Version history
+
+TODO
+
