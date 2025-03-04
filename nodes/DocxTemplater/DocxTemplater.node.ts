@@ -11,8 +11,8 @@ import {
 import type { Tool } from '@langchain/core/tools';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
-import mozjexlParser from './mozjexl-parser';
-import defaultFilters from './default-filters';
+import mozjexlParser, { Filter } from './mozjexl-parser';
+import defaultFilters, { makeFilterContainer } from './default-filters';
 
 export class DocxTemplater implements INodeType {
 	description: INodeTypeDescription = {
@@ -120,7 +120,7 @@ export class DocxTemplater implements INodeType {
 		inputs: [
 			{ displayName: '', type: NodeConnectionType.Main },
 			{
-				displayName: 'Formatters',
+				displayName: 'Transforms',
 				type: NodeConnectionType.AiTool,
 				required: false,
 			},
@@ -158,7 +158,7 @@ export class DocxTemplater implements INodeType {
 					const connectedTools =
 						((await this.getInputConnectionData(NodeConnectionType.AiTool, i)) as Tool[]) || [];
 
-					const wrapper =
+					const wrapper: (t: Tool) => Filter =
 						(t: Tool) =>
 						(arg1: any, ...args: any[]): any => {
 							const toolArgs = { input: arg1, args: args };
@@ -169,8 +169,6 @@ export class DocxTemplater implements INodeType {
 								toolArgs,
 							});
 
-							// if no args, e.g. { data.something | filter }, then pass the input as query
-							// Otherwise, e.g. {data.something | split(" ") }, then pass data.something as query.input and args in query.args
 							const retVal = t.invoke(toolArgs);
 
 							return retVal
@@ -205,10 +203,9 @@ export class DocxTemplater implements INodeType {
 						connectedTools.map((t) => [transformSafeName(t.name), wrapper(t)]),
 					);
 					this.logger.debug('docxtemplater.tools', { tools: Object.keys(mapOfTools) });
-					// TODO: Pass Proxy object that throws a nicer error when a nonexistent Filter is accessed
-					// Right now we let it pass and it explodes inside docxtemplater, and the error msg isn't too clear
-					// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
-					const jexlparser = mozjexlParser({ filters: { ...defaultFilters, ...mapOfTools } });
+
+					const filters = makeFilterContainer(this.getNode(), { ...defaultFilters, ...mapOfTools });
+					const jexlparser = mozjexlParser({ filters });
 
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);
 					const zip = new PizZip(inputDataBuffer);
@@ -234,8 +231,12 @@ export class DocxTemplater implements INodeType {
 						) {
 							throw new NodeOperationError(this.getNode(), err, {
 								itemIndex: i,
-								message: err.properties.errors[0].message,
-								description: err.properties.errors[0].properties.explanation,
+								message:
+									err.properties.errors[0].properties?.rootError.message ??
+									err.properties.errors[0].message,
+								description:
+									err.properties.errors[0].properties?.rootError.description ??
+									err.properties.errors[0].properties.explanation,
 							});
 						} else {
 							throw new NodeOperationError(this.getNode(), err, {

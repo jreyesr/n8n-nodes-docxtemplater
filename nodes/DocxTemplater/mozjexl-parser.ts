@@ -258,7 +258,10 @@ const makeParser = function (config: ParserOptions) {
 		};
 	};
 
-	jexl.addTransforms(config.filters);
+	// jexl.addTransforms(config.filters);
+	 // HACK HACK HACK: We directly set the _transforms property because .addTransforms() copies the items, one by one, to an object
+	// If it does so, we lose the Proxy object that allows us to hook accesses to nonexistent properties
+	jexl._transforms = config.filters;
 	return _parser;
 };
 export default makeParser;
