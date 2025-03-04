@@ -20,14 +20,15 @@ into this document:
 
 It also allows you to
 use [N8N's Advanced AI Tool nodes](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/), like those that
-are used to provide "Tool Calling" functionality on LLMs:
+are used to provide "Tool Calling" functionality on LLMs. These can be used to provide custom
+formatters/filters/transforms that can transform data:
 
-![img.png](img.png)
+![a screenshot from the N8N UI showing the Render node with several "tool" sub-nodes connected](imgs/readme_tools.png)
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
 [Installation](#installation)  
-[Operations](#operations)  
+[Operations](#operations)
 [Compatibility](#compatibility)  
 [Usage](#usage)
 [Resources](#resources)  
@@ -55,10 +56,10 @@ in the Word document:
 * `{ first_name }`: Will simply be replaced by the corresponding JSON field, so the output document will contain `Joe`
 * `{ first_name + " " + last_name }`: Will execute a string concatenation, so the output will be `Joe Doe`
 * `{ first_name | uppercase }`: Will read the `first_name` property and then call
-  a https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms on it (must be implemented!). This may output `JOE`
+	a https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms on it (must be implemented!). This may output `JOE`
 * `{ positions["Chief of " in .title] }`: Will [filter the
-  `positions` array](https://github.com/mozilla/mozjexl?tab=readme-ov-file#collections) array such that only positions
-  that mention "Chief of " are kept
+	`positions` array](https://github.com/mozilla/mozjexl?tab=readme-ov-file#collections) array such that only positions
+	that mention "Chief of " are kept
 
 All these can be freely mixed with Docxtemplater syntax, such
 as [loops](https://docxtemplater.com/docs/tag-types/#loops)
@@ -78,10 +79,147 @@ If you encounter any problems, please [open an issue](https://github.com/jreyesr
 
 ## Usage
 
-_This is an optional section. Use it to help users with any difficult or confusing aspects of the node._
+### Render Transforms
 
-_By the time users are looking for community nodes, they probably already know n8n basics. But if you expect new users,
-you can link to the [Try it out](https://docs.n8n.io/try-it-out/) documentation to help them get started._
+Since document tags (e.g. `{ some_field }`) in the template document use
+the [Mozjexl](https://github.com/mozilla/mozjexl) format, they also
+support [transforms](https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms)), expressed with the pipe |
+character:
+
+```
+{ some_field | uppercase }
+{ some_field | split(" ") }
+{ some_field | lower | split(" ") }
+```
+
+Transforms work
+like [Filters in the docxtemplater Angular parser](https://docxtemplater.com/docs/angular-parse/#filters), [formatters in Carbone](https://carbone.io/documentation/design/formatters/overview.html),
+[pipes in Angular](https://angular.dev/guide/templates/pipes#)
+or [in Unix shells](https://www.gnu.org/software/bash/manual/html_node/Pipelines.html), or filters in web frameworks
+like [Jinja](https://jinja.palletsprojects.com/en/stable/templates/#filters)
+or [Django](https://docs.djangoproject.com/en/5.1/ref/templates/builtins/#built-in-filter-reference): they receive a
+piece of data as input, optionally some other parameters, and they output another piece of data that is usually some
+sort of transformation of the input data.
+
+Simple transforms take no arguments other than their input data:
+
+```
+{ some_field | uppercase }
+```
+
+The `| uppercase` transform reads its input, uppercases it (which implies that it should only be called on strings) and
+returns the uppercased string.
+
+Other transforms require parameters/arguments to further customize their behavior:
+
+```
+{ now | timeformat("yyyy-MM-dd HH:mm") }
+```
+
+Filters can be chained as long as the output of the previous filter can be used as the input to the next filter:
+
+```
+{ some_field | lower | split(" ") | first | length }
+```
+
+If `some_field` is a string, `| lower` receives it and outputs another string, a lowercased version of it.
+`| split(" ")` can receive this string and split it into an array of strings. `| first` can receive this array and pick
+out its first element, which will be a string. `| length` receives that string and returns a number, the count of
+characters in the _first word_ of `some_field`.
+
+### Built-in transforms
+
+The following transforms are bundled with this N8N node. Feel free
+to [open an issue](https://github.com/jreyesr/n8n-nodes-docxtemplater/issues) if you know of other transforms that could
+be useful to more people (for example, transforms that are commonly bundled with similar software):
+
+* `| JSONstringify`: Receives any data and returns a string, the result of JSON-serializing it. Use if your output Word
+	document displays data like `[Object object]` (that's the sign of a JS object trying to be converted to a string)
+* `| JSONparse`: The opposite of `| JSONstringify`, reads in a string that should contain a JSON-encoded document and
+	outputs the actual document. Use when the render data contains JSON-encoded data
+* `| length`: Receives something that has a "length" (e.g. strings or arrays) and returns a number with the length of
+	the data. If it's a string, the length is the number of characters. if it's an array, it's the number of elements
+
+### Custom transforms
+
+This functionality is powered by N8N's Advanced AI "Tools" feature, normally used to provide "Tool Calling"
+functionality to LLMs. Tools are sub-nodes that can be "provided" to a main node, and may be called by the main node if
+necessary (e.g. when the LLM generates a tool call document while generating some text).
+
+You can add your own custom transforms by attaching them to the Transforms connection point below the node:
+
+![a screenshot of the main Render node showing a connection point on the lower side with the label Transforms](imgs/readme_transforms.png)
+
+These will be exposed as filters/transforms/pipe operators in the template document.
+
+#### Built-in N8N Tools
+
+N8N has many nodes that have been enabled to function as Tools, so they can be used with LLMs. These can all be used by
+this node.
+
+For example, the Wikipedia tool receives a piece of text, which should be the name of a Wikipedia article, and returns
+Markdown text with the beginning of the article:
+
+![a screenshot of the Wikipedia tool being called, showing that the quey "DOCX" returns the article about the Open Office XML format](imgs/readme_wikipedia_tool.png)
+
+There are [many other tools](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/), such
+as [Wolfram|Alpha](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolwolframalpha/)
+and [Calculator](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolcalculator/)
+that can run mathematical
+operations, [HTTP Request](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolhttprequest/)
+that can run arbitrary HTTP requests with the provided data, as well as many N8N nodes that have been tool-ified, such
+as Airtable, Asana, AWS, Crypto, Discord, Facebook, Gmail, Linear, OneDrive, Postgres, S3, Slack, and many more.
+
+#### Custom Code Tools
+
+If your desired transform isn't available and is better expressed as a piece of code, you can use
+the [Custom Code Tool](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolhttprequest/)
+to implement a transform:
+
+1. Add a new Custom Code tool to the Transforms
+2. Give it a name, **all lower-case**, which will be the name of the transform (the `| transform_name`) with which it'll
+	 be invoked
+3. The Description can be left empty, it's useful when using tools for LLMs but this node doesn't use it
+4. Pick a language, Javascript if possible (
+	 Python [is less efficient and has some limitations](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/#python))
+5. Write code that reads from `query` or its sub-field `query.input`:
+	* If the tool takes no additional arguments, such as `{ some_var | uppercase }`, it must read from `query` directly:
+		`query` in the code will contain whatever value `some_var` has
+	* If the tool takes additional arguments, such as `{ some_var | split(" ") }`, it must read the input data from
+		`query.input` and the additional args from `query.args`. `query.args` is _an array_ where additional args are passed
+		in order (in this example, it'll be a 1-element array `[" "]` whose single element is a string with a single space)
+6. In the code, perform whichever operations on the input data
+7. **IMPORTANT** If using a transform that receives additional params, it's necessary to also enable the **Specify Input
+	 Schema** switch, change **Schema Type** to **Generate From JSON Example** and provide a **JSON Example** that looks
+	 like the actual data that will be provided:
+	 	```json
+			{
+			 "input": "sample input",
+			 "args": [" "]
+		 }
+		 ```
+8. Return **a single string** from the code snippet. If you need to return a more complex object (e.g. an array or an
+	 Object), call `JSON.stringify(...)` (for JS) on it before returning so it returns as a string
+	* This won't affect chained transforms, such as `{ some_field | transformA | transformB }`: If `| transformA` is
+		forced to stringify its return object, `| transformB` will receive the _real_ object as `query` or `query.input`
+
+Example of a transform with no params, where the input can be accessed using the `query` name:
+
+![a screenshot of a Code tool showing the input and output data](imgs/readme_code_no_args.png)
+
+```
+{ first_name | toupper }
+```
+
+Example of a transform with additional params, where the input can be accessed on `query.input` and the transform args
+on `query.args[0]`, `query.args[1]` and so on. Notice that a custom Schema has been provided, informing N8N that this
+transform receives a string as its main input and additionally one other parameter that is also a string:
+
+```
+{ date | split("/") }
+```
+
+![a screenshot of a Code tool showing the input and output data, where the input data also contains additional arguments](imgs/readme_code_extra_args.png)
 
 ## Resources
 
