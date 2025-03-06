@@ -156,8 +156,12 @@ const makeParser = function (config: ParserOptions) {
 					{
 						get(target, name) {
 							// get(obj, "key") is called when running `obj["key"]` or `obj.key`
-							if (name === 'this') {
+							if (['this', '.', '$', '$this'].includes(name as string)) {
 								return scope;
+							}
+							if (['$$', '$root'].includes(name as string)) {
+								// asked for absolute top-level
+								return scopeList[0];
 							}
 							if (name === '$index') {
 								return getIndex(scope, context);
@@ -182,7 +186,7 @@ const makeParser = function (config: ParserOptions) {
 						},
 						has(target, name) {
 							// has(obj, "key") is called when running ("key" in obj)
-							if (['$index', 'this'].indexOf(name as string) !== -1) {
+							if (['$index', 'this', '$this', ".", "$", "$$", "$root"].includes(name as string)) {
 								return true;
 							}
 							if (scope == null) {
@@ -217,7 +221,7 @@ const makeParser = function (config: ParserOptions) {
 						},
 						getOwnPropertyDescriptor(target, name) {
 							// getOwnPropertyDescriptor(obj, "key") is called when running `obj.hasOwnProperty("key")`
-							if (['$index', 'this'].indexOf(name as string) !== -1) {
+							if (['$index', 'this', '$this', ".", "$", "$$", "$root"].includes(name as string)) {
 								return {
 									writable: true,
 									enumerable: true,
@@ -259,7 +263,7 @@ const makeParser = function (config: ParserOptions) {
 	};
 
 	// jexl.addTransforms(config.filters);
-	 // HACK HACK HACK: We directly set the _transforms property because .addTransforms() copies the items, one by one, to an object
+	// HACK HACK HACK: We directly set the _transforms property because .addTransforms() copies the items, one by one, to an object
 	// If it does so, we lose the Proxy object that allows us to hook accesses to nonexistent properties
 	jexl._transforms = config.filters;
 	return _parser;

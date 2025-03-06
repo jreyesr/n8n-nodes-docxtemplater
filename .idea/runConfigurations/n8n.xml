@@ -3,6 +3,7 @@
     <envs>
       <env name="N8N_LOG_LEVEL" value="debug" />
       <env name="N8N_PORT" value="5679" />
+      <env name="NODE_FUNCTION_ALLOW_BUILTIN" value="*" />
     </envs>
     <method v="2" />
   </configuration>

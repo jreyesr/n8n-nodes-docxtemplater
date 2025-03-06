@@ -43,7 +43,7 @@
   "devDependencies": {
     "@typescript-eslint/parser": "^7.15.0",
     "eslint": "^8.56.0",
-    "eslint-plugin-n8n-nodes-base": "^1.16.1",
+    "eslint-plugin-n8n-nodes-base": "^1.16.3",
     "gulp": "^4.0.2",
     "prettier": "^3.3.2",
     "typescript": "^5.5.3"
@@ -53,8 +53,11 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
-    "docxtemplater": "^3.60.0",
+    "docxtemplater": "^3.60.1",
+    "events": "^3.3.0",
+    "fast-glob": "^3.3.3",
     "mozjexl": "^1.1.6",
-    "pizzip": "^3.1.8"
+    "pizzip": "^3.1.8",
+    "vm2": "^3.9.19"
   }
 }

@@ -1,6 +1,8 @@
 import {
 	IExecuteFunctions,
+	ILoadOptionsFunctions,
 	INodeExecutionData,
+	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
 	JsonObject,
@@ -13,10 +15,28 @@ import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import mozjexlParser, { Filter } from './mozjexl-parser';
 import defaultFilters, { makeFilterContainer } from './default-filters';
+import { findInstalledDocxtemplaterModules, loadModule } from './modules-loader';
+
+async function getExtraModulesOptions(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	return (await findInstalledDocxtemplaterModules()).map((m) => ({
+		name: m,
+		value: m,
+		description: m,
+	}));
+}
 
 export class DocxTemplater implements INodeType {
 	description: INodeTypeDescription = {
 		properties: [
+			{ // HACK: Forces the code editors for the Modules to behave as Code nodes in "Run Once for each item" mode
+				// otherwise we don't get the suggestions for $index and such
+				displayName: 'Mode',
+				name: 'mode',
+				type: 'hidden',
+				default: 'runOnceForEachItem',
+			},
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -100,6 +120,51 @@ export class DocxTemplater implements INodeType {
 						default: 'rendered.docx',
 						description: 'Name of the output file',
 					},
+					{
+						displayName: 'Extra Modules',
+						name: 'extraModules',
+						type: 'fixedCollection',
+						placeholder: 'Add Module',
+						default: {},
+						typeOptions: {
+							multipleValues: true,
+						},
+						options: [
+							{
+								displayName: 'Module',
+								name: 'module',
+								values: [
+									{
+										displayName: 'Name',
+										name: 'name',
+										default: '',
+										type: 'options',
+										description:
+											'Choose any other modules Docxtemplater modules to load. They must be installed in the N8N environment.',
+										typeOptions: {
+											loadOptionsMethod: 'getExtraModulesOptions',
+										},
+									},
+									{
+										displayName: 'Options',
+										name: 'opts',
+										type: 'string',
+										typeOptions: {
+											editor: 'codeNodeEditor',
+											editorIsReadOnly: false,
+											editorLanguage: 'javaScript',
+											alwaysOpenEditWindow: false,
+										},
+										default:
+											'let opts = {};	\n\n// Add any necessary properties on opts\n\nreturn opts;',
+										description:
+											"JavaScript code to setup the module. See the module's docs for more information on the required options",
+										noDataExpression: true,
+									},
+								],
+							},
+						],
+					},
 				],
 				displayOptions: {
 					show: {
@@ -126,7 +191,10 @@ export class DocxTemplater implements INodeType {
 			},
 		],
 		outputs: [NodeConnectionType.Main],
+		parameterPane: 'wide',
 	};
+
+	methods = { loadOptions: { getExtraModulesOptions } };
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
@@ -155,9 +223,10 @@ export class DocxTemplater implements INodeType {
 						},
 					) as string;
 					const context = this.getNodeParameter('context', i, {}, { ensureType: 'json' });
+
+					// TOOLS SETUP
 					const connectedTools =
 						((await this.getInputConnectionData(NodeConnectionType.AiTool, i)) as Tool[]) || [];
-
 					const wrapper: (t: Tool) => Filter =
 						(t: Tool) =>
 						(arg1: any, ...args: any[]): any => {
@@ -203,13 +272,24 @@ export class DocxTemplater implements INodeType {
 						connectedTools.map((t) => [transformSafeName(t.name), wrapper(t)]),
 					);
 					this.logger.debug('docxtemplater.tools', { tools: Object.keys(mapOfTools) });
-
 					const filters = makeFilterContainer(this.getNode(), { ...defaultFilters, ...mapOfTools });
+					// END TOOLS SETUP
+
+					// MODULES SETUP
+					const extraModules = this.getNodeParameter('options.extraModules.module', i, []) as {
+						name: string;
+						opts: string;
+					}[];
+					const modules = await Promise.all(extraModules.map(loadModule.bind(this, i)));
+					console.log(modules);
+					// END MODULES SETUP
+
 					const jexlparser = mozjexlParser({ filters });
 
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);
 					const zip = new PizZip(inputDataBuffer);
 					const doc = new Docxtemplater(zip, {
+						modules,
 						paragraphLoop: this.getNodeParameter('options.paragraphLoop', i, true, {
 							extractValue: true,
 							ensureType: 'boolean',
