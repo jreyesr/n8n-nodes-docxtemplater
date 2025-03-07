@@ -30,7 +30,8 @@ async function getExtraModulesOptions(
 export class DocxTemplater implements INodeType {
 	description: INodeTypeDescription = {
 		properties: [
-			{ // HACK: Forces the code editors for the Modules to behave as Code nodes in "Run Once for each item" mode
+			{
+				// HACK: Forces the code editors for the Modules to behave as Code nodes in "Run Once for each item" mode
 				// otherwise we don't get the suggestions for $index and such
 				displayName: 'Mode',
 				name: 'mode',

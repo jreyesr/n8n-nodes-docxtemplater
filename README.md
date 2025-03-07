@@ -221,6 +221,109 @@ transform receives a string as its main input and additionally one other paramet
 
 ![a screenshot of a Code tool showing the input and output data, where the input data also contains additional arguments](imgs/readme_code_extra_args.png)
 
+### Custom Modules
+
+This node supports [Docxtemplater modules](https://docxtemplater.com/modules/),
+either [the Docxtemplater-provided paid modules](https://docxtemplater.com/pricing/), third-party modules, or (TODO)
+modules that you write yourself.
+
+Docxtemplater modules extend the functionality of Docxtemplater, such as
+allowing [variable images](https://docxtemplater.com/modules/image/) with the syntax `{%fieldWithImagePath}`
+or [raw HML](https://docxtemplater.com/modules/html/) with the syntax `{~~fieldWithHtml}`.
+
+#### Installation
+
+You first need to install the modules into the same Node.js environment used by N8N so they're available for importing.
+
+In general, if you can successfully run `require("docxtemplater-module-name")` in a JS Code node, you should be able to
+use it in this node.
+
+> [!TIP]
+> If you have already installed
+> [NPM packages for the Code node](https://community.n8n.io/t/installing-additional-module-with-npm/11682),
+> you can use that same workflow here, it should work (please raise an issue if not so I can add better instructions!).
+> Otherwise, see below.
+
+If using [the npm install](https://docs.n8n.io/hosting/installation/npm/) (native, no Docker), you can run
+`npm install -g docxtemplater docxtemplater-module-name` (the same command
+used [when installing N8N itself](https://docs.n8n.io/hosting/installation/npm/#install-globally-with-npm)) so the
+modules are installed in a place where the node can reach them.
+
+If using [the Docker install](https://docs.n8n.io/hosting/installation/docker/), you should probably use a custom
+Dockerfile in which you run the `npm install -g docxtemplater docxtemplater-module-name` command,
+as [outlined here](https://community.n8n.io/t/external-module-merge-multiple-pdfs-into-a-single-pdf/2633/2).
+
+> [!NOTE]
+> In either case, you **must** also install the `docxtemplater` package, not just the `docxtemplater-module-X` package
+> for the module itself. Docxtemplater modules depend on `docxtemplater` the main package as a dependency, so they'll
+> error out if it isn't installed
+
+#### Configuration
+
+1. Go to the node's advanced options (**Add option** button at the bottom of the node's config. Add the **Extra Modules
+	 ** option
+2. Click the **Add Module** button
+3. Choose a module in the **Name** dropdown. It'll list packages that conform to the structure `docxtemplater*module*`
+	 that are available in the same location as the N8N package itself (location varies per OS, and depending on whether
+	 you're using NVM or straight NPM)
+4. In the **Options** code editor, provide any configuration options that the module needs. This code needs to return an
+	 Object
+	* The module's docs should contain any required config. Look for the object that is passed as the first and only
+		argument to the `new NameModule(...)` call
+	* The default code simply creates an empty object `let opts = {}` and returns it
+	* For instance, the [Footnotes module](https://docxtemplater.com/modules/footnotes/) requires no config, since its
+		creation is done with `new FootnoteModule({})`. The default code works for this module
+	* By contrast, the [Image module](https://docxtemplater.com/modules/image/#usage-nodejs) requires config (it's the
+		`imageOptions` object in the sample code). Use the docs' code as a starting point
+5. In the code editor, you can access the same context as in a Code node, such as `require(...)`ing Node modules, or
+	 accesing `$item` and other execution variables
+
+See example configuration below:
+
+![a screenshot of the N8N UI showing a module and its config](imgs/readme_modules.png)
+
+```js
+const fs = require("fs");
+
+let opts = {};
+
+const getbinary = this.helpers.getBinaryDataBuffer;
+
+opts.getImage = async function (tagValue, tagName) {
+	const url = await tagValue;
+	if (url.match(/^https?:\/\//)) { // URL, download it
+		return fetch(url).then(r => r.arrayBuffer())
+	} else if (url.match(/^file:\/\//) || url.startsWith("/")) { // local file
+		const path = url.replace("file://", "");
+		return fs.readFileSync(path);
+	} else if (url.match(/binary:\/\//)) { // Ref to N8N binary data, read and return it
+		const name = url.replace("binary://", "");
+		return getbinary($itemIndex, name)
+	} else {
+		throw new Error(`Unable to handle image ${url}! URLs (http:// or https://) and local files (file:///path/to/file or /path/to/file) are supported.`);
+	}
+}
+
+opts.getSize = function (img, tagValue, tagName) {
+	return [150, 150];
+}
+
+return opts;
+```
+
+Note that:
+
+* In this code window, it's possible to `require(...)` Node.js packages, subject to the
+	usual [admin-configurable restrictions on which nodes can be imported](https://docs.n8n.io/hosting/configuration/configuration-examples/modules-in-code-node/)
+* The [`fetch()` function](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch) is also available so HTTP
+	requests can be made
+* [Any variables and functions](https://docs.n8n.io/code/builtin/current-node-input/) that would be available in a Code
+	node using JS and mode "Run once for each item" are also available here, such as `$item`, `$json`, `$binary`, [the
+	`helpers` property of
+	`IExecuteFuntions`](https://github.com/n8n-io/n8n/blob/d2dd1796a871ee41681acc44ad01dfb0bbd5eee1/packages/workflow/src/Interfaces.ts#L925),
+	and [any properties of
+	`IWorkflowDataProxyData`](https://github.com/n8n-io/n8n/blob/d2dd1796a871ee41681acc44ad01dfb0bbd5eee1/packages/workflow/src/Interfaces.ts#L1986)
+
 ## Resources
 
 * [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
