@@ -1,5 +1,13 @@
 # n8n-nodes-docxtemplater
 
+> [!TIP]
+> If you're interested in generating documents using N8N from a Word/Excel/Powerpoint template, you may also be
+> interested [in the `n8n-nodes-carbonejs` node](https://github.com/jreyesr/n8n-nodes-carbonejs), which
+> uses [Carbone](https://carbone.io/) as the rendering engine.
+> 
+> Carbone has a different syntax for filters/formatters and its node is simpler to use than this one, at the expense
+> of less configurable functionality (no custom Transforms or data sources, no Modules)
+
 This is an n8n community node. It lets you use [docxtemplater](https://docxtemplater.com/) in your n8n workflows.
 
 [docxtemplater](https://docxtemplater.com/) is a library that generates DOCX, PPTX and XLSX documents from templates and
