@@ -10,7 +10,7 @@ import {
 	NodeConnectionType,
 	NodeOperationError,
 } from 'n8n-workflow';
-import type { Tool } from '@langchain/core/tools';
+import type { StructuredTool } from '@langchain/core/tools';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import mozjexlParser, { Filter } from './mozjexl-parser';
@@ -227,11 +227,18 @@ export class DocxTemplater implements INodeType {
 
 					// TOOLS SETUP
 					const connectedTools =
-						((await this.getInputConnectionData(NodeConnectionType.AiTool, i)) as Tool[]) || [];
-					const wrapper: (t: Tool) => Filter =
-						(t: Tool) =>
+						((await this.getInputConnectionData(NodeConnectionType.AiTool, i)) as StructuredTool[]) || [];
+					const wrapper: (t: StructuredTool) => Filter =
+						(t: StructuredTool) =>
 						(arg1: any, ...args: any[]): any => {
-							const toolArgs = { input: arg1, args: args };
+							const argsAsObject = Object.fromEntries(args.map((a, i) => [`arg${i}`, a]));
+							let toolArgs = args.length > 0 ? { input: arg1, args: args, ...argsAsObject } : arg1;
+							if (args.length === 0 && t.schema._def.typeName === 'ZodObject') {
+								// Manually wrap in object if no args passed but tool expects an Object
+								const expectedKey = Object.keys(t.schema._def.shape())[0];
+								toolArgs = { [expectedKey]: toolArgs };
+							}
+
 							this.logger.debug('docxtemplater.customfilter', {
 								name: t.name,
 								input: arg1,

@@ -4,7 +4,7 @@
 > If you're interested in generating documents using N8N from a Word/Excel/Powerpoint template, you may also be
 > interested [in the `n8n-nodes-carbonejs` node](https://github.com/jreyesr/n8n-nodes-carbonejs), which
 > uses [Carbone](https://carbone.io/) as the rendering engine.
-> 
+>
 > Carbone has a different syntax for filters/formatters and its node is simpler to use than this one, at the expense
 > of less configurable functionality (no custom Transforms or data sources, no Modules)
 
@@ -39,6 +39,9 @@ formatters/filters/transforms that can transform data:
 [Operations](#operations)
 [Compatibility](#compatibility)  
 [Usage](#usage)
+→[Transforms](#render-transforms)
+→[Docxtemplater Modules](#docxtemplater-modules)
+→[Data Resolving](#data-resolving)
 [Resources](#resources)  
 [Version history](#version-history)
 
@@ -135,7 +138,7 @@ If `some_field` is a string, `| lower` receives it and outputs another string, a
 out its first element, which will be a string. `| length` receives that string and returns a number, the count of
 characters in the _first word_ of `some_field`.
 
-### Built-in transforms
+#### Built-in transforms
 
 The following transforms are bundled with this N8N node. Feel free
 to [open an issue](https://github.com/jreyesr/n8n-nodes-docxtemplater/issues) if you know of other transforms that could
@@ -148,7 +151,7 @@ be useful to more people (for example, transforms that are commonly bundled with
 * `| length`: Receives something that has a "length" (e.g. strings or arrays) and returns a number with the length of
 	the data. If it's a string, the length is the number of characters. if it's an array, it's the number of elements
 
-### Custom transforms
+#### Custom transforms
 
 This functionality is powered by N8N's Advanced AI "Tools" feature, normally used to provide "Tool Calling"
 functionality to LLMs. Tools are sub-nodes that can be "provided" to a main node, and may be called by the main node if
@@ -195,7 +198,13 @@ to implement a transform:
 		`query` in the code will contain whatever value `some_var` has
 	* If the tool takes additional arguments, such as `{ some_var | split(" ") }`, it must read the input data from
 		`query.input` and the additional args from `query.args`. `query.args` is _an array_ where additional args are passed
-		in order (in this example, it'll be a 1-element array `[" "]` whose single element is a string with a single space)
+		in order (in this example, it'll be a 1-element array `[" "]` whose single element is a string with a single space).
+		Additionally, if the tool takes additional arguments, they will be exposed as `arg0`, `arg1` and so on (in other
+		words, you can also access the first transform argument as `query.arg0`). This is provided to allow the use of
+		tools that can't index into arrays, such as
+		the [HTTP Request Tool](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolhttprequest/)
+		that only accepts placeholders like `{arg0}` of type String, but not `{args.0}` or `{args[0]}` with `args` of type
+		Array
 6. In the code, perform whichever operations on the input data
 7. **IMPORTANT** If using a transform that receives additional params, it's necessary to also enable the **Specify Input
 	 Schema** switch, change **Schema Type** to **Generate From JSON Example** and provide a **JSON Example** that looks
@@ -229,7 +238,7 @@ transform receives a string as its main input and additionally one other paramet
 
 ![a screenshot of a Code tool showing the input and output data, where the input data also contains additional arguments](imgs/readme_code_extra_args.png)
 
-### Custom Modules
+### Docxtemplater Modules
 
 This node supports [Docxtemplater modules](https://docxtemplater.com/modules/),
 either [the Docxtemplater-provided paid modules](https://docxtemplater.com/pricing/), third-party modules, or (TODO)
@@ -331,6 +340,20 @@ Note that:
 	`IExecuteFuntions`](https://github.com/n8n-io/n8n/blob/d2dd1796a871ee41681acc44ad01dfb0bbd5eee1/packages/workflow/src/Interfaces.ts#L925),
 	and [any properties of
 	`IWorkflowDataProxyData`](https://github.com/n8n-io/n8n/blob/d2dd1796a871ee41681acc44ad01dfb0bbd5eee1/packages/workflow/src/Interfaces.ts#L1986)
+
+### Data Resolving
+
+Docxtemplater supports [async data resolving](https://docxtemplater.com/docs/async/), which means that it can fetch data
+_in the middle of_ rendering the template. In a "normal" templating engine, data must be fetched _before_ the template
+is rendered, and it must be passed (typically in the form of a JSON document) to the rendering step. This means that the
+template can't control the data fetched, since when the template is read the data has already been fetched.
+
+By contrast, Docxtemplater (and also [`docx-templates`, by Guillermo Grau](https://github.com/guigrpa/docx-templates),
+and maybe other libraries) can allow the template to control the fetched data. In Docxtemplater, this is done by
+[passing Promise-returning functions, or equivalently async functions, to the
+`renderAsync` function](https://docxtemplater.com/docs/async/#code-for-async-data-resolution), where normally the
+content of each tag is passed. Docxtemplater transparently awaits any Promise-containing tags such that they can be
+referenced in the template as if they were normal, data-carrying tags.
 
 ## Resources
 
