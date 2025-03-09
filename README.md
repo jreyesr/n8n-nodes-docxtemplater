@@ -363,6 +363,27 @@ and maybe other libraries) can allow the template to control the fetched data. I
 content of each tag is passed. Docxtemplater transparently awaits any Promise-containing tags such that they can be
 referenced in the template as if they were normal, data-carrying tags.
 
+You can use the same Tools in Data Resolvers as in Transforms, such as Code snippets, HTTP requests, and database
+requests.
+
+Note that since Data Resolvers are the first step in a (potential) chain of Transforms, they don't have "input data" in
+the same sense as a Transform that receives some data+optionally some params, and returns some data. Data Resolvers only
+receive optional params, and return some data. This means that you can't access `query` or `query.input` (it'll be
+empty).
+
+Access the parameters passed to the resolver function, if any, as `arg0`, `arg1` and so on. In the Code tool, they must
+be accessed as `query.arg0`, `query.arg1` and so on (remember to also Specify Input Schema in the Code tool, and specify
+the Placeholders in the HTTP Request tool).
+
+| Template                                                   | Tool         | Notes                                                                                                                                       | Data Resolver                                                                                                                |
+|------------------------------------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| `{ getUsers() }`                                           | HTTP Request | Takes no params                                                                                                                             | ![a HTTP Request Tool that outputs a JSON array](imgs/readme_resolver_http_noargs.png)                                       |
+| `{ getUserById(1) }`                                       | HTTP Request | `arg0` will be available on tool, as a Number                                                                                               | ![a HTTP Request Tool that receives a number and outputs a JSON object](imgs/readme_resolver_http_arg.png)                   |
+| `{ (getUserById(1) \| JSONparse).first_name \| toUpper } ` | HTTP Request | Gets the user as above, parses JSON response, accesses a property and then applies a custom Transform                                       | _(same as above)_                                                                                                            |
+| `{ getPosts() }`                                           | Postgres     | Takes no params                                                                                                                             | ![a Postgres Tool that outputs a list of records](imgs/readme_resolver_postgres_noargs.png)                                  |
+| `{ getPost(1).title }`                                     | Postgres     | Takes `arg0`, using [the `$fromAI()` function](https://docs.n8n.io/advanced-ai/examples/using-the-fromai-function/#use-the-fromai-function) | ![a Postgres Tool that receives a number and outputs a list with a single record](imgs/readme_resolver_postgres_args.png)    |
+| `{ complicatedcalculation(1) }`                            | Code         | Takes `arg0`, which appears as `query.arg0` in Code tools                                                                                   | ![a Code tool that receives a number and returns another number after running some code](imgs/readme_resolver_code_args.png) |
+
 ## Resources
 
 * [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
@@ -370,5 +391,10 @@ referenced in the template as if they were normal, data-carrying tags.
 
 ## Version history
 
-TODO
+### v1.0.0
+
+* Initial release, basic rendering functionality
+* Custom Transforms/filters (both `{ something | transformA }` and `{ something | transform("param") }`)
+* Supports Docxtemplater's Modules, Pro or third-party
+* Custom Data Resolvers (data inputs) (both `{ getData() }` and `{ getData("param") }`)
 
