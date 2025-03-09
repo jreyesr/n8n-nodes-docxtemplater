@@ -186,6 +186,11 @@ export class DocxTemplater implements INodeType {
 		inputs: [
 			{ displayName: '', type: NodeConnectionType.Main },
 			{
+				displayName: 'Data Resolvers',
+				type: NodeConnectionType.AiTool,
+				required: false,
+			},
+			{
 				displayName: 'Transforms',
 				type: NodeConnectionType.AiTool,
 				required: false,
@@ -227,10 +232,14 @@ export class DocxTemplater implements INodeType {
 
 					// TOOLS SETUP
 					const connectedTools =
-						((await this.getInputConnectionData(NodeConnectionType.AiTool, i)) as StructuredTool[]) || [];
+						((await this.getInputConnectionData(
+							NodeConnectionType.AiTool,
+							i,
+						)) as StructuredTool[]) || [];
 					const wrapper: (t: StructuredTool) => Filter =
 						(t: StructuredTool) =>
 						(arg1: any, ...args: any[]): any => {
+							// will look like {arg0: <val>, arg1: <val>, ...}
 							const argsAsObject = Object.fromEntries(args.map((a, i) => [`arg${i}`, a]));
 							let toolArgs = args.length > 0 ? { input: arg1, args: args, ...argsAsObject } : arg1;
 							if (args.length === 0 && t.schema._def.typeName === 'ZodObject') {
@@ -289,10 +298,25 @@ export class DocxTemplater implements INodeType {
 						opts: string;
 					}[];
 					const modules = await Promise.all(extraModules.map(loadModule.bind(this, i)));
-					console.log(modules);
+					this.logger.debug('docxtemplater.modules', { modules });
 					// END MODULES SETUP
 
-					const jexlparser = mozjexlParser({ filters });
+					// DATA RESOLVERS SETUP
+					const dataResolverWrapper: (t: StructuredTool) => (...args: any[]) => Promise<any> = (
+						t: StructuredTool,
+					) => {
+						return async function (...args): Promise<any> {
+							// will look like {arg0: <val>, arg1: <val>, ...}
+							const argsAsObject = Object.fromEntries(args.map((a, i) => [`arg${i}`, a]));
+							return t.invoke({ input: "", args: args, ...argsAsObject });
+						};
+					};
+					const connectedResolvers = Object.fromEntries(
+						connectedTools.map((t) => [t.name, dataResolverWrapper(t)]),
+					);
+					this.logger.debug('docxtemplater.dataResolvers', { connectedResolvers });
+					// END DATA RESOLVERS SETUP
+
 					const jexlparser = jexlParser({ filters, resolvers: connectedResolvers });
 
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);

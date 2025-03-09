@@ -9,12 +9,13 @@
  */
 
 import type { DXT } from 'docxtemplater';
-// @ts-ignore mozjexl has no types, see https://github.com/mozilla/mozjexl/issues/19
-import mozjexl from 'mozjexl';
 import { Jexl } from 'jexl';
+
+type Resolver = (...args: any) => Promise<any>;
 
 interface ParserOptions {
 	filters: Record<string, Filter>;
+	resolvers: Record<string, Resolver>;
 }
 
 export type Filter = (value: any, ...args: any[]) => any;
@@ -263,10 +264,14 @@ const makeParser = function (config: ParserOptions) {
 		};
 	};
 
-	// jexl.addTransforms(config.filters);
-	// HACK HACK HACK: We directly set the _transforms property because .addTransforms() copies the items, one by one, to an object
-	// If it does so, we lose the Proxy object that allows us to hook accesses to nonexistent properties
-	jexl._transforms = config.filters;
+	// jexl.addTransforms(config.filters); // DOESN'T WORK, SEE BELOW
+	// HACK HACK HACK: We directly set the _grammar.transforms property because .addTransforms() copies the items, one by one, to an object
+	// When it does so, we lose the Proxy object that allows us to hook accesses to nonexistent properties
+	// @ts-ignore
+	jexl._grammar.transforms = config.filters;
+
+	jexl.addFunctions(config.resolvers);
+
 	return _parser;
 };
 export default makeParser;
