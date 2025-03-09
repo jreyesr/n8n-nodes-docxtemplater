@@ -29,6 +29,11 @@ async function getExtraModulesOptions(
 
 export class DocxTemplater implements INodeType {
 	description: INodeTypeDescription = {
+		codex: {
+			resources: {
+				primaryDocumentation: [{ url: 'https://github.com/jreyesr/n8n-nodes-docxtemplater' }],
+			},
+		},
 		properties: [
 			{
 				// HACK: Forces the code editors for the Modules to behave as Code nodes in "Run Once for each item" mode
@@ -177,7 +182,7 @@ export class DocxTemplater implements INodeType {
 		displayName: 'DocxTemplater',
 		name: 'docxTemplater',
 		group: ['transform'],
-		// icon: 'file:friendGrid.svg',
+		icon: 'file:docxtemplater.svg',
 		version: 1,
 		description: 'Generate an Office document from a template',
 		defaults: {
@@ -308,7 +313,7 @@ export class DocxTemplater implements INodeType {
 						return async function (...args): Promise<any> {
 							// will look like {arg0: <val>, arg1: <val>, ...}
 							const argsAsObject = Object.fromEntries(args.map((a, i) => [`arg${i}`, a]));
-							return t.invoke({ input: "", args: args, ...argsAsObject });
+							return t.invoke({ input: '', args: args, ...argsAsObject });
 						};
 					};
 					const connectedResolvers = Object.fromEntries(
