@@ -14,8 +14,8 @@ This is an n8n community node. It lets you use [docxtemplater](https://docxtempl
 a database containing the custom data. This enables you to automate large-scale document generation efficiently.
 
 The docxtemplater tags (e.g. `{ object.data | filter1 | filter2 }`) can
-use [Mozjexl](https://github.com/mozilla/mozjexl?tab=readme-ov-file#all-the-details) syntax: binary operators such as +
-and -, comparisons such as == or !=, and [transforms](https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms)
+use [Jexl](https://github.com/TomFrost/Jexl?tab=readme-ov-file#all-the-details) syntax: binary operators such as +
+and -, comparisons such as == or !=, and [transforms](https://github.com/TomFrost/Jexl?tab=readme-ov-file#transforms)
 such as `| lower` that work like shell pipes.
 
 This node lets you transform this template document:
@@ -61,16 +61,23 @@ corresponding data in the context.
 ![a screenshot from the N8N UI showing a Render node, which has a Word document in the input and some JSON data in a text field](imgs/readme_nodeconfig.png)
 
 With the context in the image above, it's possible to write tags like this (and, in
-general, [anything else that is supported by the Mozjexl Javascript Expression Language](https://github.com/mozilla/mozjexl)
+general, [anything else that is supported by Jexl, AKA Javascript Expression language](https://github.com/TomFrost/Jexl)
 in the Word document:
 
 * `{ first_name }`: Will simply be replaced by the corresponding JSON field, so the output document will contain `Joe`
 * `{ first_name + " " + last_name }`: Will execute a string concatenation, so the output will be `Joe Doe`
+* `{ first_name ? "Hello, " + first_name : "Hello!" }`: Supports
+	the [ternary operator](https://github.com/TomFrost/Jexl?tab=readme-ov-file#ternary-operator) (if X then Y else Z), and
+	special syntax for an operation similar to null-coalescing: `{ user.first_name ?: "Person" }`
 * `{ first_name | uppercase }`: Will read the `first_name` property and then call
-	a https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms on it (must be implemented!). This may output `JOE`
+	a [transform](https://github.com/TomFrost/Jexl?tab=readme-ov-file#transforms) on it (must be implemented!
+	See [below](#render-transforms)). This may output, if so implemented, `JOE` if `first_name` is `Joe`
 * `{ positions["Chief of " in .title] }`: Will [filter the
-	`positions` array](https://github.com/mozilla/mozjexl?tab=readme-ov-file#collections) array such that only positions
-	that mention "Chief of " are kept
+	`positions` array](https://github.com/TomFrost/Jexl?tab=readme-ov-file#collections) array such that only positions
+	that mention "Chief of ..." are kept
+* `{ getUsers("ACTIVE") }`: Functions, with and without arguments,
+	are [also supported](https://github.com/TomFrost/Jexl?tab=readme-ov-file#functions) at the top level (as the first
+	element, not just as transforms after a pipe)
 
 All these can be freely mixed with Docxtemplater syntax, such
 as [loops](https://docxtemplater.com/docs/tag-types/#loops)
@@ -93,8 +100,8 @@ If you encounter any problems, please [open an issue](https://github.com/jreyesr
 ### Render Transforms
 
 Since document tags (e.g. `{ some_field }`) in the template document use
-the [Mozjexl](https://github.com/mozilla/mozjexl) format, they also
-support [transforms](https://github.com/mozilla/mozjexl?tab=readme-ov-file#transforms)), expressed with the pipe |
+the [Jexl](https://github.com/TomFrost/Jexl) format, they also
+support [transforms](https://github.com/TomFrost/Jexl?tab=readme-ov-file#transforms)), expressed with the pipe |
 character:
 
 ```
@@ -191,8 +198,9 @@ to implement a transform:
 2. Give it a name, **all lower-case**, which will be the name of the transform (the `| transform_name`) with which it'll
 	 be invoked
 3. The Description can be left empty, it's useful when using tools for LLMs but this node doesn't use it
-4. Pick a language, Javascript if possible (
-	 Python [is less efficient and has some limitations](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/#python))
+4. Pick a language, Javascript if possible (Python
+	 [is less efficient and has some limitations](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/#python)),
+	 and I haven't tested it
 5. Write code that reads from `query` or its sub-field `query.input`:
 	* If the tool takes no additional arguments, such as `{ some_var | uppercase }`, it must read from `query` directly:
 		`query` in the code will contain whatever value `some_var` has

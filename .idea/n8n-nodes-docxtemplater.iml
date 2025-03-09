@@ -9,5 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="n8n" level="project" />
+    <orderEntry type="library" name="jexl" level="project" />
   </component>
 </module>

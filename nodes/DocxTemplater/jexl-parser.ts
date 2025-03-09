@@ -11,6 +11,7 @@
 import type { DXT } from 'docxtemplater';
 // @ts-ignore mozjexl has no types, see https://github.com/mozilla/mozjexl/issues/19
 import mozjexl from 'mozjexl';
+import { Jexl } from 'jexl';
 
 interface ParserOptions {
 	filters: Record<string, Filter>;
@@ -134,11 +135,11 @@ function getIndex(scope: any, context: any) {
 // }
 
 const makeParser = function (config: ParserOptions) {
-	const jexl = new mozjexl.Jexl();
+	const jexl = new Jexl();
 	const _parser = function (this: Parser, tag: string): DXT.Parser {
 		if (typeof tag !== 'string') {
 			throw new Error(
-				'The mozjexl parser was used incorrectly, please refer to the documentation of docxtemplater.',
+				'The jexl parser was used incorrectly, please refer to the documentation of docxtemplater.',
 			);
 		}
 		tag = tag.replace(/[’‘]/g, "'").replace(/[“”]/g, '"');
@@ -186,7 +187,7 @@ const makeParser = function (config: ParserOptions) {
 						},
 						has(target, name) {
 							// has(obj, "key") is called when running ("key" in obj)
-							if (['$index', 'this', '$this', ".", "$", "$$", "$root"].includes(name as string)) {
+							if (['$index', 'this', '$this', '.', '$', '$$', '$root'].includes(name as string)) {
 								return true;
 							}
 							if (scope == null) {
@@ -221,7 +222,7 @@ const makeParser = function (config: ParserOptions) {
 						},
 						getOwnPropertyDescriptor(target, name) {
 							// getOwnPropertyDescriptor(obj, "key") is called when running `obj.hasOwnProperty("key")`
-							if (['$index', 'this', '$this', ".", "$", "$$", "$root"].includes(name as string)) {
+							if (['$index', 'this', '$this', '.', '$', '$$', '$root'].includes(name as string)) {
 								return {
 									writable: true,
 									enumerable: true,

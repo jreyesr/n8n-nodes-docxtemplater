@@ -1,4 +1,4 @@
-import { Filter } from './mozjexl-parser';
+import { Filter } from './jexl-parser';
 import { NodeOperationError } from 'n8n-workflow';
 import type { INode } from 'n8n-workflow';
 

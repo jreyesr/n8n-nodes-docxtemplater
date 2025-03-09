@@ -53,10 +53,11 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
+    "@types/jexl": "^2.3.4",
     "docxtemplater": "^3.60.1",
     "events": "^3.3.0",
     "fast-glob": "^3.3.3",
-    "mozjexl": "^1.1.6",
+    "jexl": "^2.3.0",
     "pizzip": "^3.1.8",
     "vm2": "^3.9.19"
   }
