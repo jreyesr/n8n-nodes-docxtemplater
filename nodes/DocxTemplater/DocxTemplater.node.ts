@@ -13,7 +13,7 @@ import {
 import type { StructuredTool } from '@langchain/core/tools';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
-import mozjexlParser, { Filter } from './mozjexl-parser';
+import jexlParser, { Filter } from './jexl-parser';
 import defaultFilters, { makeFilterContainer } from './default-filters';
 import { findInstalledDocxtemplaterModules, loadModule } from './modules-loader';
 
@@ -293,6 +293,7 @@ export class DocxTemplater implements INodeType {
 					// END MODULES SETUP
 
 					const jexlparser = mozjexlParser({ filters });
+					const jexlparser = jexlParser({ filters, resolvers: connectedResolvers });
 
 					const inputDataBuffer = await this.helpers.getBinaryDataBuffer(i, inputFileProperty);
 					const zip = new PizZip(inputDataBuffer);
