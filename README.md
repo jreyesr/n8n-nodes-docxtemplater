@@ -52,7 +52,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 If you'd like a quickstart, import the [sample workflow](./samples/Docxtemplater_sample.json) that is included with this
 repo into your N8N instance. It'll take a Word document like this:
 
-![a screenshot of a template for an invoice, containing placeholder tags](readme_sample_template.png)
+![a screenshot of a template for an invoice, containing placeholder tags](imgs/readme_sample_template.png)
 
 run it through a workflow like this, using the following data:
 
@@ -76,11 +76,11 @@ run it through a workflow like this, using the following data:
 }
 ```
 
-![a screenshot of an executed N8N workflow where a document has been downloaded, rendered and converted to PDF](readme_executed_sample_workflow.png)
+![a screenshot of an executed N8N workflow where a document has been downloaded, rendered and converted to PDF](imgs/readme_executed_sample_workflow.png)
 
 and output a PDF document like this:
 
-![a screenshot of a PDF document based on the template above, but where placeholders have been replaced by actual data](readme_sample_output_document.png)
+![a screenshot of a PDF document based on the template above, but where placeholders have been replaced by actual data](imgs/readme_sample_output_document.png)
 
 
 
