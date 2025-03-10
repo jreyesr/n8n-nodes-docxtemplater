@@ -59,7 +59,7 @@ export class DocxTemplater implements INodeType {
 				noDataExpression: true,
 			},
 			{
-				displayName: 'Input file name',
+				displayName: 'Input File Name',
 				name: 'binaryProperty',
 				type: 'string',
 				displayOptions: {
@@ -89,44 +89,6 @@ export class DocxTemplater implements INodeType {
 				default: {},
 				options: [
 					{
-						displayName: 'Paragraph Loop',
-						name: 'paragraphLoop',
-						type: 'boolean',
-						default: true,
-						description:
-							"If enabled, looped paragraphs won't have additional spaces due to the loop tags. See <a href='https://docxtemplater.com/docs/configuration/#how-to-use-it'>https://docxtemplater.com/docs/configuration/#how-to-use-it</a>.",
-					},
-					{
-						displayName: 'Render Newlines',
-						name: 'linebreaks',
-						type: 'boolean',
-						default: true,
-						description:
-							"If enabled, newline characters (\\n) in tags will show up in the output, otherwise they will be ignored. See <a href='https://docxtemplater.com/docs/configuration/#linebreaks'>https://docxtemplater.com/docs/configuration/#linebreaks</a>.",
-					},
-					{
-						displayName: 'Enable Angular parser',
-						name: 'enableAngularParser',
-						type: 'boolean',
-						default: true,
-						description:
-							"If enabled, Angular expressions (e.g. addition, nested property access and filters) will be available in the template. See <a href='https://docxtemplater.com/docs/angular-parse/'>https://docxtemplater.com/docs/angular-parse/</a>.",
-					},
-					{
-						displayName: 'Put Output File in Field',
-						name: 'binaryPropertyOutput',
-						type: 'string',
-						default: 'data',
-						hint: 'The name of the output binary field to put the rendered document in',
-					},
-					{
-						displayName: 'File Name',
-						name: 'outputFileName',
-						type: 'string',
-						default: 'rendered.docx',
-						description: 'Name of the output file',
-					},
-					{
 						displayName: 'Extra Modules',
 						name: 'extraModules',
 						type: 'fixedCollection',
@@ -141,10 +103,12 @@ export class DocxTemplater implements INodeType {
 								name: 'module',
 								values: [
 									{
+										// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
 										displayName: 'Name',
 										name: 'name',
 										default: '',
 										type: 'options',
+										// eslint-disable-next-line n8n-nodes-base/node-param-description-wrong-for-dynamic-options
 										description:
 											'Choose any other modules Docxtemplater modules to load. They must be installed in the N8N environment.',
 										typeOptions: {
@@ -164,12 +128,42 @@ export class DocxTemplater implements INodeType {
 										default:
 											'let opts = {};	\n\n// Add any necessary properties on opts\n\nreturn opts;',
 										description:
-											"JavaScript code to setup the module. See the module's docs for more information on the required options",
+											"JavaScript code to setup the module. See the module's docs for more information on the required options.",
 										noDataExpression: true,
 									},
 								],
 							},
 						],
+					},
+					{
+						displayName: 'File Name',
+						name: 'outputFileName',
+						type: 'string',
+						default: 'rendered.docx',
+						description: 'Name of the output file',
+					},
+					{
+						displayName: 'Paragraph Loop',
+						name: 'paragraphLoop',
+						type: 'boolean',
+						default: true,
+						description:
+							"Whether to remove additional spaces due to the loop tags. See <a href='https://docxtemplater.com/docs/configuration/#how-to-use-it'>https://docxtemplater.com/docs/configuration/#how-to-use-it</a>.",
+					},
+					{
+						displayName: 'Put Output File in Field',
+						name: 'binaryPropertyOutput',
+						type: 'string',
+						default: 'data',
+						hint: 'The name of the output binary field to put the rendered document in',
+					},
+					{
+						displayName: 'Render Newlines',
+						name: 'linebreaks',
+						type: 'boolean',
+						default: true,
+						description:
+							"Whether to allow newline characters (\\n) in tags will show up in the output, otherwise they will be ignored. See <a href='https://docxtemplater.com/docs/configuration/#linebreaks'>https://docxtemplater.com/docs/configuration/#linebreaks</a>.",
 					},
 				],
 				displayOptions: {
@@ -188,6 +182,7 @@ export class DocxTemplater implements INodeType {
 		defaults: {
 			name: 'DocxTemplater',
 		},
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [
 			{ displayName: '', type: NodeConnectionType.Main },
 			{
@@ -201,6 +196,7 @@ export class DocxTemplater implements INodeType {
 				required: false,
 			},
 		],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionType.Main],
 		parameterPane: 'wide',
 	};
