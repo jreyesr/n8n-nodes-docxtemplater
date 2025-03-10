@@ -40,7 +40,7 @@
     },
     {
       "parameters": {
-        "url": "https://raw.githubusercontent.com/jreyesr/n8n-nodes-docxtemplater/refs/heads/master/samples/invoice-docx.docx",
+        "url": "https://github.com/jreyesr/n8n-nodes-docxtemplater/raw/refs/heads/master/samples/invoice-docx.docx",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
