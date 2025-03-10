@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-docxtemplater",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "n8n node to create Word/Excel/Powerpoint documents from template documents, using docxtemplater",
   "keywords": [
     "n8n-community-node-package"
