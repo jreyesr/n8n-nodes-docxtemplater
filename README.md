@@ -47,8 +47,42 @@ formatters/filters/transforms that can transform data:
 
 ## Installation
 
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community
-nodes documentation.
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
+
+If you'd like a quickstart, import the [sample workflow](./samples/Docxtemplater_sample.json) that is included with this
+repo into your N8N instance. It'll take a Word document like this:
+
+![a screenshot of a template for an invoice, containing placeholder tags](readme_sample_template.png)
+
+run it through a workflow like this, using the following data:
+
+```json
+{
+	"first_name": "John",
+	"last_name": "Doe",
+	"phone": "0652XXXX42",
+	"invoice_number": "318",
+	"invoice_date": "8 May 2025",
+	"items": [
+		{
+			"description": "Docxtemplater Pro Plan",
+			"price": "950"
+		}
+	],
+	"total_price": "950",
+	"price": "950",
+	"tax": "190",
+	"final_price": "1140"
+}
+```
+
+![a screenshot of an executed N8N workflow where a document has been downloaded, rendered and converted to PDF](readme_executed_sample_workflow.png)
+
+and output a PDF document like this:
+
+![a screenshot of a PDF document based on the template above, but where placeholders have been replaced by actual data](readme_sample_output_document.png)
+
+
 
 ## Operations
 

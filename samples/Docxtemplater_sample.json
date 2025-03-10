@@ -1,0 +1,192 @@
+{
+  "name": "Docxtemplater sample",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "db1c73e1-2772-4e6a-b419-89b6b27a40ae",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://demo.gotenberg.dev/forms/libreoffice/convert",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "6fb052d6-52b3-4499-974b-153bf5b2987c",
+      "name": "Convert to PDF"
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/jreyesr/n8n-nodes-docxtemplater/refs/heads/master/samples/invoice-docx.docx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "fa65d591-ecd6-431a-8891-f4b67519d9ac",
+      "name": "Retrieve DOCX template"
+    },
+    {
+      "parameters": {
+        "context": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"phone\": \"0652XXXX42\",\n  \"invoice_number\": \"318\",\n  \"invoice_date\": \"8 May 2025\",\n  \"items\": [\n    {\n      \"description\": \"Docxtemplater Pro Plan\",\n      \"price\": \"950\"\n    }\n  ],\n  \"total_price\": \"950\",\n  \"price\": \"950\",\n  \"tax\": \"190\",\n  \"final_price\": \"1140\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-docxtemplater.docxTemplater",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "9e8acfbe-06e9-4417-a0e1-58d4c61b9883",
+      "name": "Docxtemplater"
+    },
+    {
+      "parameters": {
+        "name": "sumBy",
+        "jsCode": "const items = JSON.parse(query.input)\nreturn items.map(i=>i[query.args[0]]).reduce((a, b) => a+b)\n",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"input\": \"\",\n  \"args\": [\"\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        580,
+        260
+      ],
+      "id": "4a210be2-fd08-4032-b3e2-3c18dc1361ff",
+      "name": "sumby"
+    },
+    {
+      "parameters": {
+        "name": "upper",
+        "jsCode": "return query.toUpperCase()\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        240
+      ],
+      "id": "f65615a5-ee37-4b91-8adb-39bff5b6082c",
+      "name": "upper"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [
+        360,
+        260
+      ],
+      "id": "27c5dbd4-4ae0-4c46-9e55-564bacdc08d2",
+      "name": "now"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Retrieve DOCX template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve DOCX template": {
+      "main": [
+        [
+          {
+            "node": "Docxtemplater",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Docxtemplater": {
+      "main": [
+        [
+          {
+            "node": "Convert to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sumby": {
+      "ai_tool": [
+        [
+          {
+            "node": "Docxtemplater",
+            "type": "ai_tool",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "upper": {
+      "ai_tool": [
+        [
+          {
+            "node": "Docxtemplater",
+            "type": "ai_tool",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "now": {
+      "ai_tool": [
+        [
+          {
+            "node": "Docxtemplater",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "28bbc388-f8ba-4d2e-891b-d4388c0193f1",
+  "meta": {
+    "instanceId": "080ac704083142d467ab8f09c32e4cef70809dd0c2339539414566a5cdcf51a4"
+  },
+  "id": "eURgYD7KxEtpSzjQ",
+  "tags": []
+}
