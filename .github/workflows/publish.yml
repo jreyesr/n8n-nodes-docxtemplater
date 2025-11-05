@@ -2,7 +2,11 @@ name: Release on NPM
 
 on:
   release:
-    types: [created]
+    types: [ created ]
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   release:
@@ -19,9 +23,10 @@ jobs:
           node-version: 22
           cache: 'pnpm'
           registry-url: https://registry.npmjs.org
+      # Ensure npm 11.5.1 or later is installed
+      - name: Update npm
+        run: npm install -g npm@latest
       - name: Install dependencies
         run: pnpm install --frozen-lockfile && pnpm run build
       - name: Publish package on NPM 📦
         run: pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
