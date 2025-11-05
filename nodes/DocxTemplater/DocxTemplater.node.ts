@@ -5,8 +5,6 @@ import {
 	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
-	JsonObject,
-	NodeApiError,
 	NodeConnectionType,
 	NodeOperationError,
 } from 'n8n-workflow';
@@ -336,29 +334,7 @@ export class DocxTemplater implements INodeType {
 						inputDataBuffer: inputDataBuffer.length,
 						context,
 					});
-					await doc.renderAsync(context).catch((err) => {
-						// Docxtemplater's special errors, if there's only one we can expose it at the top level
-						if (
-							err.name === 'TemplateError' &&
-							err.message === 'Multi error' &&
-							err.properties.errors.length === 1
-						) {
-							throw new NodeOperationError(this.getNode(), err, {
-								itemIndex: i,
-								message:
-									err.properties.errors[0].properties?.rootError.message ??
-									err.properties.errors[0].message,
-								description:
-									err.properties.errors[0].properties?.rootError.description ??
-									err.properties.errors[0].properties.explanation,
-							});
-						} else {
-							throw new NodeOperationError(this.getNode(), err, {
-								itemIndex: i,
-								description: 'See the N8N logs for more details on the error',
-							});
-						}
-					});
+					await doc.renderAsync(context);
 					const outputDataBuffer = doc
 						.getZip()
 						.generate({ type: 'nodebuffer', compression: 'DEFLATE' });
@@ -376,8 +352,23 @@ export class DocxTemplater implements INodeType {
 			} catch (error) {
 				const nodeOperationError = new NodeOperationError(this.getNode(), error, {
 					itemIndex: i,
-					message: 'Error while rendering',
+					message: error.properties.message ?? 'Error while rendering',
+					description:
+						error.properties.explanation ?? 'See the N8N logs for more details on the error',
 				});
+
+				// Docxtemplater's special errors, if there's only one error we can expose it at the top level
+				if (
+					error.name === 'TemplateError' &&
+					error.message === 'Multi error' &&
+					error.properties.errors.length === 1
+				) {
+					nodeOperationError.message = error.properties.errors[0].message;
+					nodeOperationError.description = error.properties.errors[0].properties.explanation;
+					nodeOperationError.context = error.properties.errors[0];
+					nodeOperationError.stack = error.properties.errors[0].stack;
+				}
+
 				if (this.continueOnFail()) {
 					returnData.push({
 						json: {
@@ -387,7 +378,7 @@ export class DocxTemplater implements INodeType {
 					});
 					continue;
 				}
-				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
+				throw nodeOperationError;
 			}
 		}
 		return [returnData];

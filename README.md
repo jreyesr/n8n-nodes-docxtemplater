@@ -35,19 +35,20 @@ formatters/filters/transforms that can transform data:
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-[Installation](#installation)  
-[Operations](#operations)
-[Compatibility](#compatibility)  
-[Usage](#usage)
-→[Transforms](#render-transforms)
-→[Docxtemplater Modules](#docxtemplater-modules)
-→[Data Resolving](#data-resolving)
-[Resources](#resources)  
+[Installation](#installation)  \
+[Operations](#operations)\
+[Compatibility](#compatibility)  \
+[Usage](#usage) \
+→[Transforms](#render-transforms) \
+→[Docxtemplater Modules](#docxtemplater-modules)\
+→[Data Resolving](#data-resolving)\
+[Resources](#resources)  \
 [Version history](#version-history)
 
 ## Installation
 
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community
+nodes documentation.
 
 If you'd like a quickstart, import the [sample workflow](./samples/Docxtemplater_sample.json) that is included with this
 repo into your N8N instance. It'll take a Word document like this:
@@ -81,8 +82,6 @@ run it through a workflow like this, using the following data:
 and output a PDF document like this:
 
 ![a screenshot of a PDF document based on the template above, but where placeholders have been replaced by actual data](imgs/readme_sample_output_document.png)
-
-
 
 ## Operations
 
@@ -251,12 +250,12 @@ to implement a transform:
 7. **IMPORTANT** If using a transform that receives additional params, it's necessary to also enable the **Specify Input
 	 Schema** switch, change **Schema Type** to **Generate From JSON Example** and provide a **JSON Example** that looks
 	 like the actual data that will be provided:
-	 	```json
-			{
-			 "input": "sample input",
-			 "args": [" "]
-		 }
-		 ```
+	  ```json
+		 {
+			"input": "sample input",
+			"args": [" "]
+		}
+		```
 8. Return **a single string** from the code snippet. If you need to return a more complex object (e.g. an array or an
 	 Object), call `JSON.stringify(...)` (for JS) on it before returning so it returns as a string
 	* This won't affect chained transforms, such as `{ some_field | transformA | transformB }`: If `| transformA` is
@@ -424,6 +423,10 @@ the Placeholders in the HTTP Request tool).
 * <https://docxtemplater.com/docs/tag-types/>
 
 ## Version history
+
+### v1.0.1
+
+* If a single error happens while rendering, show it instead of a MultiError message
 
 ### v1.0.0
 
