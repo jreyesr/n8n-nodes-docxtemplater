@@ -40,7 +40,7 @@
     },
     {
       "parameters": {
-        "url": "https://github.com/jreyesr/n8n-nodes-docxtemplater/raw/refs/heads/master/samples/invoice-docx.docx",
+        "url": "https://raw.githubusercontent.com/jreyesr/n8n-nodes-docxtemplater/master/samples/invoice-docx.docx",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "context": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"phone\": \"0652XXXX42\",\n  \"invoice_number\": \"318\",\n  \"invoice_date\": \"8 May 2025\",\n  \"items\": [\n    {\n      \"description\": \"Docxtemplater Pro Plan\",\n      \"price\": \"950\"\n    }\n  ],\n  \"total_price\": \"950\",\n  \"price\": \"950\",\n  \"tax\": \"190\",\n  \"final_price\": \"1140\"\n}",
+        "context": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"phone\": \"0652XXXX42\",\n  \"invoice_number\": \"318\",\n  \"invoice_date\": \"8 May 2025\",\n  \"items\": [\n    {\n      \"description\": \"Docxtemplater Pro Plan\",\n      \"price\": \"950\"\n    },\n    {\n      \"description\": \"Docxtemplater Pro free\",\n      \"price\": \"150\"\n    }\n  ],\n  \"total_price\": \"950\",\n  \"price\": \"950\",\n  \"tax\": \"190\",\n  \"final_price\": \"1140\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-docxtemplater.docxTemplater",
@@ -69,7 +69,7 @@
     {
       "parameters": {
         "name": "sumBy",
-        "jsCode": "const items = JSON.parse(query.input)\nreturn items.map(i=>i[query.args[0]]).reduce((a, b) => a+b)\n",
+        "jsCode": "const items = JSON.parse(query.input);\n\nreturn items\n  .map(i => parseFloat(i[query.args[0]]))\n  .reduce((a, b) => a + b, 0);\n",
         "specifyInputSchema": true,
         "jsonSchemaExample": "{\n\t\"input\": \"\",\n  \"args\": [\"\"]\n}"
       },
